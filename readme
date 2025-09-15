@@ -1,0 +1,22 @@
+# Object Detection System
+
+Real-time object detection system using YOLOv8 that monitors objects left on a table.
+
+## Features
+- Real-time object detection
+- Table area monitoring
+- Human presence detection
+- Alert system for unattended objects
+
+## Setup
+1. Install requirements:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Run the script:
+   ```bash
+   python object_YOLO.py
+   ```
+
+## Configuration
+Adjust `table_area` coordinates in `object_YOLO.py` to match your camera view.
