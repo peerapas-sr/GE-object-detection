@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 import time
 import threading
-import winsound  # For beep sound (Windows only)
+import winsound
 
 # Load YOLOv8 pretrained model
 model = YOLO("yolov8n.pt")
@@ -13,6 +13,10 @@ table_area = (100, 250, 500, 480)
 # Shared frame between threads
 frame = None
 stop_flag = False
+
+# Timer variables
+last_human_time = time.time()
+alert_delay = 10  # 60 seconds = 1 minute
 
 def capture_frames():
     """Thread for capturing frames from webcam."""
@@ -52,6 +56,7 @@ while True:
 
             if label == "person":
                 human_present = True
+                last_human_time = time.time()  # Reset timer when human is present
                 cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0,255,0), 2)
                 cv2.putText(display_frame, f"{label} {conf:.2f}", (x1, y1-10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
@@ -72,13 +77,23 @@ while True:
     cv2.putText(display_frame, f"Objects on Table: {object_count}", (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,255), 2)
 
+    # Calculate time since last human presence
+    time_since_human = time.time() - last_human_time
+
     if object_count > 0 and not human_present:
+        # Show countdown timer
+        remaining_time = max(0, alert_delay - time_since_human)
+        cv2.putText(display_frame, f"Alert in: {int(remaining_time)}s",
+                    (10, display_frame.shape[0] - 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
+                    
         cv2.putText(display_frame, "NOTICE: Object on table but NO Human!",
                     (10, display_frame.shape[0] - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
 
-        # 🔔 Beep sound (1000 Hz, 500 ms)
-        winsound.Beep(1000, 500)
+        # Only beep after delay
+        if time_since_human >= alert_delay:
+            winsound.Beep(1000, 500)
 
     cv2.imshow("Detection", display_frame)
 
